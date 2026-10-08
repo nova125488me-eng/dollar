@@ -457,7 +457,7 @@ async def build_text(data: dict) -> str:
 @dp.message(Command("start", "dollar", "price"))
 async def cmd_price(message: Message):
     # گرفتن دامین از متغیرهای محیطی یا حالت پیش‌فرض برای دکمه مینی‌اپ
-    web_app_url = os.environ.get("WEB_APP_URL", "https://dollar-production-a967.up.railway.app/")
+    web_app_url = os.environ.get("WEB_APP_URL", "dollar-production-82c0.up.railway.app")
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
