@@ -1,98 +1,849 @@
+```html
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>قیمت لحظه‌ای بازار</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background-color: #0f172a;
+            margin: 0;
+            background:
+                radial-gradient(circle at 15% 10%, rgba(59,130,246,.18), transparent 30%),
+                radial-gradient(circle at 85% 20%, rgba(99,102,241,.15), transparent 28%),
+                radial-gradient(circle at 50% 90%, rgba(16,185,129,.08), transparent 30%),
+                #070b14;
+
             color: #f8fafc;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        /* پس زمینه نقطه‌ای */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+
+            background-image:
+                radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+
+            background-size: 28px 28px;
+            mask-image: linear-gradient(to bottom, black, transparent);
         }
-    </style>
-</head>
-<body class="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-between">
 
-    <div>
-        <!-- هدر -->
-        <header class="text-center my-6">
-            <h1 class="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                📊 قیمت لحظه‌ای بازار
-            </h1>
-            <p class="text-xs text-slate-400 mt-1">بروزرسانی هوشمند از دیتابیس اختصاصی</p>
-        </header>
+        .app {
+            width: 100%;
+            max-width: 520px;
+            margin: auto;
+            padding: 18px 15px 25px;
+            position: relative;
+            z-index: 2;
+        }
 
-        <!-- لیست قیمت‌ها -->
-        <div id="price-list" class="space-y-3">
-            <div class="glass-card p-4 rounded-2xl text-center text-slate-400 animate-pulse">
-                در حال بارگذاری قیمت‌ها از سرور...
-            </div>
-        </div>
-    </div>
+        /* هدر */
+        .hero {
+            position: relative;
+            overflow: hidden;
 
-    <!-- فوتر -->
-    <footer class="text-center text-xs text-slate-500 my-4">
-        تم دارک فضایی • متصل به Railway 🚀
-    </footer>
+            padding: 22px 20px;
+            margin-bottom: 18px;
 
-    <script>
-        // فعال‌سازی حالت تلگرام مینی‌اپ
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+            border-radius: 28px;
 
-        async function fetchPrices() {
-            try {
-                const response = await fetch('/api/prices');
-                const data = await response.json();
-                
-                const container = document.getElementById('price-list');
-                container.innerHTML = '';
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(30,41,59,.85),
+                    rgba(15,23,42,.72)
+                );
 
-                const names = {
-                    'dollar': { title: '💵 دلار آزاد', unit: 'تومان' },
-                    'euro': { title: '💶 یورو', unit: 'تومان' },
-                    'usdt': { title: '💲 تتر', unit: 'تومان' },
-                    'btc': { title: '₿ بیت‌کوین', unit: 'دلار' },
-                    'gold18': { title: '🥇 طلای ۱۸ عیار', unit: 'تومان' },
-                    'coin': { title: '🪙 سکه تمام', unit: 'تومان' },
-                    'ounce': { title: '🌍 اونس جهانی', unit: 'دلار' }
-                };
+            border: 1px solid rgba(255,255,255,.09);
 
-                for (const [key, info] of Object.entries(names)) {
-                    if (data[key]) {
-                        const val = data[key].value.toLocaleString();
-                        container.innerHTML += `
-                            <div class="glass-card p-4 rounded-2xl flex justify-between items-center shadow-lg">
-                                <span class="font-medium text-slate-200">${info.title}</span>
-                                <div class="text-left">
-                                    <span class="font-bold text-emerald-400">${val}</span>
-                                    <span class="text-xs text-slate-400 mr-1">${info.unit}</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById('price-list').innerHTML = `
-                    <div class="glass-card p-4 rounded-2xl text-center text-rose-400">
-                        خطا در دریافت اطلاعات از سرور
-                    </div>
-                `;
+            box-shadow:
+                0 20px 60px rgba(0,0,0,.35),
+                inset 0 1px 0 rgba(255,255,255,.05);
+
+            backdrop-filter: blur(18px);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+
+            width: 160px;
+            height: 160px;
+
+            top: -80px;
+            left: -60px;
+
+            background: rgba(59,130,246,.25);
+            filter: blur(50px);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 6px 10px;
+            border-radius: 999px;
+
+            background: rgba(16,185,129,.1);
+            border: 1px solid rgba(16,185,129,.2);
+
+            color: #6ee7b7;
+            font-size: 11px;
+            font-weight: 700;
+
+            margin-bottom: 13px;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #34d399;
+
+            box-shadow: 0 0 10px #34d399;
+
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%,100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .45;
+                transform: scale(.75);
             }
         }
 
-        fetchPrices();
-        // بروزرسانی خودکار هر ۶۰ ثانیه
-        setInterval(fetchPrices, 60000);
-    </script>
+        .title {
+            font-size: 26px;
+            font-weight: 900;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #60a5fa,
+                    #818cf8,
+                    #a78bfa
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+
+            color: transparent;
+
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 7px;
+        }
+
+        /* زمان آخرین آپدیت */
+        .update-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin: 15px 2px 12px;
+
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .refresh-btn {
+            border: 0;
+            outline: none;
+
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 8px 11px;
+
+            border-radius: 12px;
+
+            color: #cbd5e1;
+            background: rgba(255,255,255,.05);
+
+            border: 1px solid rgba(255,255,255,.07);
+
+            cursor: pointer;
+
+            transition: .2s;
+        }
+
+        .refresh-btn:active {
+            transform: scale(.94);
+        }
+
+        .refresh-icon {
+            font-size: 14px;
+        }
+
+        .refreshing .refresh-icon {
+            animation: rotate .7s linear infinite;
+        }
+
+        @keyframes rotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* کارت قیمت */
+        .price-card {
+            position: relative;
+            overflow: hidden;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 17px;
+
+            margin-bottom: 11px;
+
+            border-radius: 21px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(30,41,59,.82),
+                    rgba(15,23,42,.72)
+                );
+
+            border: 1px solid rgba(255,255,255,.075);
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,.20),
+                inset 0 1px 0 rgba(255,255,255,.025);
+
+            backdrop-filter: blur(16px);
+
+            animation: cardIn .45s ease both;
+
+            transition:
+                transform .2s,
+                border-color .2s,
+                background .2s;
+        }
+
+        .price-card:active {
+            transform: scale(.985);
+        }
+
+        .price-card:hover {
+            border-color: rgba(99,102,241,.25);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .coin-icon {
+            width: 46px;
+            height: 46px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 15px;
+
+            background: rgba(255,255,255,.05);
+
+            border: 1px solid rgba(255,255,255,.07);
+
+            font-size: 21px;
+
+            flex-shrink: 0;
+        }
+
+        .price-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            min-width: 0;
+        }
+
+        .price-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .price-description {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .price-value {
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .value {
+            font-size: 16px;
+            font-weight: 900;
+            color: #6ee7b7;
+
+            direction: ltr;
+        }
+
+        .unit {
+            font-size: 9px;
+            color: #64748b;
+            margin-right: 4px;
+        }
+
+        /* تغییر قیمت */
+        .change {
+            display: inline-flex;
+            align-items: center;
+
+            margin-top: 4px;
+
+            padding: 2px 6px;
+
+            border-radius: 7px;
+
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .up {
+            color: #34d399;
+            background: rgba(16,185,129,.1);
+        }
+
+        .down {
+            color: #fb7185;
+            background: rgba(244,63,94,.1);
+        }
+
+        .same {
+            color: #94a3b8;
+            background: rgba(148,163,184,.08);
+        }
+
+        /* لودینگ */
+        .loading {
+            padding: 18px;
+
+            border-radius: 21px;
+
+            background: rgba(30,41,59,.65);
+            border: 1px solid rgba(255,255,255,.07);
+
+            color: #64748b;
+
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .loading-bar {
+            width: 80%;
+            height: 4px;
+
+            margin: 10px auto 0;
+
+            border-radius: 20px;
+
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #6366f1,
+                transparent
+            );
+
+            animation: loading 1.3s infinite;
+        }
+
+        @keyframes loading {
+            from {
+                transform: translateX(-30%);
+                opacity: .3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(30%);
+                opacity: .3;
+            }
+        }
+
+        /* خطا */
+        .error {
+            padding: 18px;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            color: #fb7185;
+
+            background: rgba(244,63,94,.07);
+
+            border: 1px solid rgba(244,63,94,.15);
+
+            font-size: 12px;
+        }
+
+        /* فوتر */
+        footer {
+            text-align: center;
+
+            margin-top: 25px;
+
+            color: #475569;
+            font-size: 10px;
+        }
+
+        .footer-brand {
+            color: #64748b;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- هدر -->
+    <header class="hero">
+
+        <div class="hero-content">
+
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                LIVE MARKET
+            </div>
+
+            <div class="title">
+                📊 قیمت لحظه‌ای بازار
+            </div>
+
+            <div class="subtitle">
+                آخرین قیمت ارز، طلا، سکه و رمزارزها
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- کنترل -->
+    <div class="update-row">
+
+        <span id="last-update">
+            در حال دریافت اطلاعات...
+        </span>
+
+        <button
+            class="refresh-btn"
+            id="refresh-btn"
+            onclick="manualRefresh()"
+        >
+            <span class="refresh-icon">↻</span>
+            بروزرسانی
+        </button>
+
+    </div>
+
+
+    <!-- قیمت‌ها -->
+    <div id="price-list">
+
+        <div class="loading">
+
+            <div>
+                در حال دریافت قیمت‌ها...
+            </div>
+
+            <div class="loading-bar"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- فوتر -->
+    <footer>
+
+        <div>
+            داده‌ها به‌صورت خودکار بروزرسانی می‌شوند
+        </div>
+
+        <div class="footer-brand">
+            🚀 Powered by Nova Market
+        </div>
+
+    </footer>
+
+</div>
+
+
+<script>
+
+    /* Telegram Mini App */
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+        tg.expand();
+
+        try {
+            tg.setHeaderColor("#070b14");
+            tg.setBackgroundColor("#070b14");
+        } catch (e) {}
+    }
+
+
+    /* اطلاعات بازار */
+
+    const names = {
+
+        dollar: {
+            title: "دلار آزاد",
+            description: "USD / IRR",
+            icon: "💵",
+            unit: "تومان"
+        },
+
+        euro: {
+            title: "یورو",
+            description: "EUR / IRR",
+            icon: "💶",
+            unit: "تومان"
+        },
+
+        usdt: {
+            title: "تتر",
+            description: "USDT / IRR",
+            icon: "💲",
+            unit: "تومان"
+        },
+
+        btc: {
+            title: "بیت‌کوین",
+            description: "BTC / USD",
+            icon: "₿",
+            unit: "دلار"
+        },
+
+        gold18: {
+            title: "طلای ۱۸ عیار",
+            description: "Gold 18K",
+            icon: "🥇",
+            unit: "تومان"
+        },
+
+        coin: {
+            title: "سکه تمام",
+            description: "Emami Coin",
+            icon: "🪙",
+            unit: "تومان"
+        },
+
+        ounce: {
+            title: "اونس جهانی",
+            description: "Gold Ounce",
+            icon: "🌍",
+            unit: "دلار"
+        }
+
+    };
+
+
+    /* قیمت قبلی */
+
+    let previousPrices = {};
+
+
+    /* دریافت قیمت‌ها */
+
+    async function fetchPrices(showLoading = false) {
+
+        const button = document.getElementById("refresh-btn");
+
+        try {
+
+            button.classList.add("refreshing");
+
+            if (showLoading) {
+
+                document.getElementById("price-list").innerHTML = `
+                    <div class="loading">
+                        دریافت آخرین قیمت‌ها...
+                        <div class="loading-bar"></div>
+                    </div>
+                `;
+
+            }
+
+
+            const response = await fetch(
+                "/api/prices",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+            if (!response.ok) {
+                throw new Error("Server Error");
+            }
+
+
+            const data = await response.json();
+
+            const container =
+                document.getElementById("price-list");
+
+
+            container.innerHTML = "";
+
+
+            let index = 0;
+
+
+            for (const [key, info] of Object.entries(names)) {
+
+                if (!data[key]) continue;
+
+
+                const current =
+                    Number(data[key].value);
+
+
+                const old =
+                    previousPrices[key];
+
+
+                let changeClass = "same";
+                let changeText = "— بدون تغییر";
+
+
+                if (old !== undefined) {
+
+                    if (current > old) {
+
+                        changeClass = "up";
+
+                        changeText = "▲ افزایش";
+
+                    }
+
+                    else if (current < old) {
+
+                        changeClass = "down";
+
+                        changeText = "▼ کاهش";
+
+                    }
+
+                    else {
+
+                        changeClass = "same";
+
+                        changeText = "— بدون تغییر";
+
+                    }
+
+                }
+
+
+                const formatted =
+                    current.toLocaleString("fa-IR");
+
+
+                const card = document.createElement("div");
+
+                card.className = "price-card";
+
+                card.style.animationDelay =
+                    `${index * 0.06}s`;
+
+
+                card.innerHTML = `
+
+                    <div class="price-info">
+
+                        <div class="coin-icon">
+                            ${info.icon}
+                        </div>
+
+                        <div>
+
+                            <div class="price-name">
+                                ${info.title}
+                            </div>
+
+                            <div class="price-description">
+                                ${info.description}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="price-value">
+
+                        <div>
+
+                            <span class="value">
+                                ${formatted}
+                            </span>
+
+                            <span class="unit">
+                                ${info.unit}
+                            </span>
+
+                        </div>
+
+                        <div class="change ${changeClass}">
+                            ${changeText}
+                        </div>
+
+                    </div>
+
+                `;
+
+
+                container.appendChild(card);
+
+
+                previousPrices[key] = current;
+
+                index++;
+
+            }
+
+
+            if (index === 0) {
+
+                container.innerHTML = `
+                    <div class="error">
+                        ⚠️ اطلاعاتی برای نمایش وجود ندارد
+                    </div>
+                `;
+
+            }
+
+
+            const now = new Date();
+
+            document.getElementById("last-update").textContent =
+                "آخرین بروزرسانی: " +
+                now.toLocaleTimeString("fa-IR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                });
+
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            document.getElementById("price-list").innerHTML = `
+
+                <div class="error">
+
+                    ❌ خطا در دریافت اطلاعات
+
+                    <div style="margin-top:5px;opacity:.7">
+                        اتصال به سرور برقرار نشد
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+        finally {
+
+            setTimeout(() => {
+
+                button.classList.remove("refreshing");
+
+            }, 400);
+
+        }
+
+    }
+
+
+    /* بروزرسانی دستی */
+
+    function manualRefresh() {
+
+        fetchPrices(true);
+
+    }
+
+
+    /* اجرای اولیه */
+
+    fetchPrices();
+
+
+    /* بروزرسانی خودکار هر ۶۰ ثانیه */
+
+    setInterval(() => {
+
+        fetchPrices(false);
+
+    }, 60000);
+
+</script>
+
 </body>
 </html>
+```
