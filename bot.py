@@ -482,7 +482,7 @@ async def on_refresh(call: CallbackQuery):
         await call.answer("⏳ در حال بروزرسانی...")
         data = await fetch_all()
         
-        web_app_url = os.environ.get("WEB_APP_URL", "https://your-domain.railway.app")
+        web_app_url = os.environ.get("WEB_APP_URL", "dollar-production-82c0.up.railway.app")
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
