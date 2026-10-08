@@ -457,7 +457,7 @@ async def build_text(data: dict) -> str:
 @dp.message(Command("start", "dollar", "price"))
 async def cmd_price(message: Message):
     # گرفتن دامین از متغیرهای محیطی یا حالت پیش‌فرض برای دکمه مینی‌اپ
-    web_app_url = os.environ.get("WEB_APP_URL", "https://dollar-production-82c0.up.railway.app/")
+    web_app_url = os.environ.get("WEB_APP_URL", "https://your-domain.railway.app")
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -482,7 +482,7 @@ async def on_refresh(call: CallbackQuery):
         await call.answer("⏳ در حال بروزرسانی...")
         data = await fetch_all()
         
-        web_app_url = os.environ.get("WEB_APP_URL", "https://dollar-production-82c0.up.railway.app/")
+        web_app_url = os.environ.get("WEB_APP_URL", "https://your-domain.railway.app")
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
